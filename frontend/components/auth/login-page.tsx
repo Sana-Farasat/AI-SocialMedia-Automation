@@ -50,7 +50,10 @@ export function LoginPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<FormData>({ resolver: zodResolver(schema) });
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+    defaultValues: { email: "john@gmail.com", password: "john12345" },
+  });
 
   const onSubmit = async (data: FormData) => {
     try {
