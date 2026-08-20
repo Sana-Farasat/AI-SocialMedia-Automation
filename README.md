@@ -72,6 +72,48 @@ Set `NEXT_PUBLIC_API_URL` in `frontend/.env.local` if the API is not on
 - **Analytics** — dashboard with metrics available from each platform's API
 - **Retry & audit** — exponential backoff on transient failures, every attempt recorded, audit log
 
+## Worker deployment (cron-job.org)
+
+Scheduled posts are published by a worker. Two options — run the APScheduler
+process on an always-on host, or (free, no credit card) let **cron-job.org** hit
+the backend's HTTP trigger endpoint every minute.
+
+### 1. Set `WORKER_TOKEN`
+
+Generate a token and add it to `backend/.env` (or your host's env vars):
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+```
+WORKER_TOKEN=<wo-generated-token>
+```
+
+> A separate token keeps `SECRET_KEY` out of the URL that cron-job.org stores and
+> logs. If empty, the endpoint falls back to `SECRET_KEY` (backward compatible).
+
+### 2. Test the endpoint
+
+Deploy the backend to a public HTTPS URL, then open in a browser:
+
+```
+https://<aapka-backend-domain>/api/worker/process-due?token=<WORKER_TOKEN>
+```
+
+Expected: `{"processed": 0, "published": 0, "failed": 0}`. `401` = wrong token.
+
+### 3. Create the cron job
+
+1. Register at https://cron-job.org (no card needed)
+2. **New cronjob** → paste the URL above → method `GET`
+3. Schedule: **1 minute** (cron-job.org minimum)
+4. Save, then use **Execute** to test; watch **Last executions**
+
+Limits: 1-minute minimum interval · 30s request timeout · auto-disables after ~25
+consecutive failures. Fine for text/image posts; heavy video publishing is better
+on the always-on worker. Full details: [WORKER.md](WORKER.md).
+
 ## Docs
 
 - [Worker & scheduling](WORKER.md) — APScheduler worker **or** free cron-job.org trigger (no card needed)
@@ -101,7 +143,7 @@ restrictions or uses unofficial APIs.
 - **Frontend**: Vercel-compatible (`next build` / `next start`)
 - **Backend**: deployable to any Python-compatible host; `backend/vercel.json` + `backend/api/index.py` provide a serverless (Vercel/Mangum) entry too
 - **Database**: PostgreSQL 13+ (Neon works out of the box)
-- **Worker**: run `python -m worker.main` as a long-lived process
+- **Worker**: run `python -m worker.main` as a long-lived process, **or** trigger `GET /api/worker/process-due` from free cron-job.org (see [Worker deployment](#worker-deployment-cron-joborg))
 
 ## Security
 
