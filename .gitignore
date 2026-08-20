@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+backend/.venv/
+__pycache__/
+*.pyc
+
+# Environment / secrets — never commit
+.env
+.env.local
+.env.*.local
+*.pem
+
+# Build output
+.next/
+frontend/.next/
+out/
+dist/
+build/
+
+# Database / test artifacts
+*.db
+*.sqlite3
+backend/uploads/
+backend/common/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
